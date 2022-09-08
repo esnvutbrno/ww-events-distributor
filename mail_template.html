@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome Week Registration | IMPORTANT | ESN VUT Brno</title>
+</head>
+<body>
+Hello, {{ first }}!
+<br>
+Your registration to Welcome Week Summer 2022 has been accepted!
+<br>
+You have been registered for these events:
+
+<ul>
+    {% for event in events %}
+    <li><strong>{{ event.0 }}:</strong> {{ event.1 }}</li>
+    {% endfor %}
+</ul>
+
+<span style="background-color: #EE000088; color: black; font-size: 20px">
+It's MANDATORY to come to <a href="https://esnvutbrno.cz/where-find-us">Panda Point</a> and sign for these events.
+<br>
+Come on Monday 31st of January at {{ time }}, be on time!
+</span>
+
+<br>
+<br>
+
+During Monday, only registration for events will be going on in Panda Point.
+To pick up your ESNcard, SIM card or to buy some basic utensils, <strong>please visit Panda Point other days than Monday.</strong>
+<br>
+<br>
+In case you ordered your ESN card in advance, <strong>come to pick it up from Tuesday.</strong>
+
+For those who missed deadline, you can still make a reservation by filling out this
+<a href="https://bit.ly/ESNcardApplicationESNVUTBrno">application form: https://bit.ly/ESNcardApplicationESNVUTBrno</a>.
+
+<br>
+<br>
+Looking forward to seeing you during Welcome Week,<br>
+your ESN VUT Brno 🐼
+</body>
+</html>
