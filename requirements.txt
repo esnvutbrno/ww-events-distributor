@@ -3,3 +3,4 @@ Django==3.2.15
 pdfkit==1.0.0
 pytz==2022.2.1
 sqlparse==0.4.2
+ics

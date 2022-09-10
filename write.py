@@ -33,8 +33,8 @@ WITH ordered AS (
 )
 SELECT
        o.time,
-       o.first_name,
        o.last_name,
+       o.first_name,
        o.phone_number,
        o.email,
        o.{column}
@@ -59,7 +59,7 @@ ORDER BY time ASC;
 """
 
 
-@dataclasses.dataclass
+@dataclass
 class Event:
     subtitle: str
     title: str
@@ -67,6 +67,10 @@ class Event:
     limit: int | None = 10000
     db_column: str | None = None
     offset: int | None = None
+
+    begin: str = None # in UTC
+    duration: int = None
+    location: str = None
 
     @property
     def column(self) -> str:
@@ -103,25 +107,44 @@ def row_factory(cursor, row):
 
 class Divider:
     EVENTS = (
-        Event('Tue 13th Sep, 15:00, in front of A03', 'Brno Observatory and Planetarium', 'observatory', 140),
-        Event('Tue 13th Sep, 19:40, in front of A03', 'Quiz Night #1', 'quiz1', 42, 'quiz_night', 0),
+                 Event('Tue 13th Sep, 15:00, in front of A03', 'Brno Observatory and Planetarium', 'observatory', 140,
+                       begin='2022-09-13 13:00:00', location='Kolejní 2, Brno', duration=120),
+                 Event('Tue 13th Sep, 19:40, in front of A03', 'Quiz Night #1', 'quiz1', 42, 'quiz_night', 0,
+                       begin='2022-09-13 17:40:00', location='Kolejní 2, Brno', duration=120),
 
-        Event('Wed 14th Sep, 14:00, in front of A03', 'Panda Games', 'panda_games', 1000),
-        Event('Wed 14th Sep, 18:50, in front of A03', 'Board Games #1', 'board1', 50, 'board_games', 0),
-        Event('Wed 14th Sep, 19:00, Panda Point', 'Guitar Jam', 'guitar_jam', 30),
+                 Event('Wed 14th Sep, 14:00, in front of A03', 'Panda Games', 'panda_games', 1000,
+                       begin='2022-09-14 12:00:00', location='Kolejní 2, Brno', duration=120),
+                 Event('Wed 14th Sep, 18:50, in front of A03', 'Board Games #1', 'board1', 50, 'board_games', 0,
+                       begin='2022-09-14 16:50:00', location='Kolejní 2, Brno', duration=120),
+                 Event('Wed 14th Sep, 19:00, Panda Point', 'Guitar Jam', 'guitar_jam', 30,
+                       begin='2022-09-14 17:00:00', location='Kolejní 2, Brno', duration=120),
 
-        Event('Thu 15th Sep, 14:00, in front of A03', 'Technical Museum', 'technical_museum', 140),
-        Event('Thu 15th Sep, 18:50, in front of A03', 'Board Games #2', 'board2', 50, 'board_games', 50),
-        Event('Thu 15th Sep, 19:00, in front of A03', 'Bowling Time', 'bowling', 36),
+                 Event('Thu 15th Sep, 14:00, in front of A03', 'Technical Museum', 'technical_museum', 140,
+                       begin='2022-09-15 12:00:00', location='Kolejní 2, Brno', duration=120),
+                 Event('Thu 15th Sep, 18:50, in front of A03', 'Board Games #2', 'board2', 50, 'board_games', 50,
+                       begin='2022-09-15 16:50:00', location='Kolejní 2, Brno', duration=120),
+                 Event('Thu 15th Sep, 19:00, in front of A03', 'Bowling Time', 'bowling', 36,
+                       begin='2022-09-15 17:00:00', location='Kolejní 2, Brno', duration=120),
 
-        Event('Fri 16th Sep, 15:00, in front of A03', 'VIDA! Science centre', 'vida', 140),
-        Event('Fri 16th Sep, 19:40, in front of A03', 'Quiz Night #2', 'quiz2', 42, 'quiz_night', 42),
+                 Event('Fri 16th Sep, 15:00, in front of A03', 'VIDA! Science centre', 'vida', 140,
+                       begin='2022-09-16 13:00:00', location='Kolejní 2, Brno', duration=120),
+                 Event('Fri 16th Sep, 19:40, in front of A03', 'Quiz Night #2', 'quiz2', 42, 'quiz_night', 42,
+                       begin='2022-09-16 17:40:00', location='Kolejní 2, Brno', duration=120),
 
-        Event('Sat 17th Sep, 14:00, in front of A03', 'Erasmus Festival and Flag Parade', 'erasmus_festival', 1000),
+                 Event('Sat 17th Sep, 14:00, in front of A03', 'Flag Parade and Erasmus Festival', 'erasmus_festival',
+                       1000,
+                       begin='2022-09-17 12:00:00', location='Kolejní 2, Brno', duration=8 * 60),
 
-        Event('Sun 18th Sep, 12:00, in front of A03', 'Brno City Rally', 'city_rally', 136),
-        Event('Sun 18th Sep, 20:00, in front of A03', 'BBQ', 'bbq', 1000),
-    )
+                 Event('Sun 18th Sep, 12:00, in front of A03', 'Brno City Rally', 'city_rally', 136,
+                       begin='2022-09-18 10:00:00', location='Kolejní 2, Brno', duration=180),
+                 Event('Sun 18th Sep, 20:00, in front of A03', 'BBQ', 'bbq', 1000,
+                       begin='2022-09-18 18:00:00', location='Kolejní 2, Brno', duration=120),
+             )[::-1]
+
+    # seed(43) # 82.38
+    # seed(44) # 83
+    # seed(45) #
+    # shuffle(EVENTS)
 
     # planetarium vida museum city_rally
 
@@ -132,11 +155,12 @@ class Divider:
     )
 
     people_to_event_titles = defaultdict(list)
-    people_to_email = defaultdict(list)
+    people_to_email = {}
     events_to_people_email = defaultdict(set)
     email_to_pp_time = dict()
 
     people_to_wanted_events_count = dict()
+    people_live_on_dorms = dict()
 
     def fair_divide(self):
         self.cursor.execute(ALL_DATA_QUERY)
@@ -157,9 +181,11 @@ class Divider:
             assigned_to_event_categories = set()
             assigned_to_events = set()
 
-            self.people_to_wanted_events_count[(person['first_name'], person['last_name'])] = sum(
+            key = (person['last_name'], person['first_name'])
+            self.people_to_wanted_events_count[key] = sum(
                 person[e.column] == 'YES' for e in self.EVENTS
             )
+            self.people_live_on_dorms[key] = person['on_dorms'] == 'YES'
 
             for e in self.EVENTS:
                 # does he really want this event?
@@ -167,7 +193,7 @@ class Divider:
                     continue
 
                 # candidate, but cannot have more than two events
-                if len(MAX_TWO_FROM & people_to_event_identifiers[person['email']]) >= 2:
+                if len({*people_to_event_identifiers[person['email']], e.identifier} & MAX_TWO_FROM) >= 3:
                     continue
 
                 # already does have this one in this category
@@ -185,9 +211,9 @@ class Divider:
                 assigned_to_event_categories.add(e.category)
                 assigned_to_events.add(e.identifier)
 
-                self.people_to_event_titles[(person['first_name'], person['last_name'])].append(e.title)
+                self.people_to_event_titles[key].append(e.title)
                 self.events_to_people_email[e.identifier].add(person['email'])
-                self.people_to_email[(person['first_name'], person['last_name'])] = person['email']
+                self.people_to_email[key] = person['email']
 
             if not assigned_to_events:
                 print(f'no.event', person['email'], ' '.join(f'{e.identifier}={person[e.column]}' for e in self.EVENTS))
@@ -204,8 +230,15 @@ class Divider:
         self.base_dir = Path('./out')
         self.base_dir.mkdir(exist_ok=True)
 
+        self.cache_dir = Path('./.cache')
+        self.cache_dir.mkdir(exist_ok=True)
+
         self.html_path = (self.base_dir / f'ALL.html').as_posix()
         self.pdf_path = (self.base_dir / f'ALL.pdf').as_posix()
+
+        self.events_to_spec = {}
+        for spec in self.EVENTS:
+            self.events_to_spec[spec.title] = spec
 
     def write_event_detail(self, data: list[dict[str, str]], spec: Event):
         # csv_path = (self.base_dir / f'{spec.identifier}.csv').as_posix()
@@ -220,8 +253,8 @@ class Divider:
         context = Context({
             'rows': tuple(
                 (
-                    person['first_name'],
                     person['last_name'],
+                    person['first_name'],
                     person['phone_number'],
                 ) for person in data
             ),
@@ -265,21 +298,31 @@ class Divider:
 
     def people_to_data(self, _data, times, count_from=0):
         i = 0
-        for (key, activities) in sorted(_data.items(), key=lambda t: t[0][1]):
+        events_length = len(self.EVENTS)
+        error_sum = 0.
+        for (key, activities) in sorted(
+            _data.items(),
+            key=lambda t: (self.people_live_on_dorms[t[0]], t[0][0].lower().strip())
+        ):
             self.email_to_pp_time[self.people_to_email[key]] = time = times[i // 30]
 
+            wants_rate = self.people_to_wanted_events_count[key] / events_length
+            has_rate = len(activities) / events_length
+            error_sum += abs(wants_rate - has_rate)
             yield (
                 count_from + i + 1,
                 key[0].title(),
                 key[1].title(),
-                ', '.join(activities),
-                f'{len(activities)}/{self.people_to_wanted_events_count[key]}',
+                ', '.join(activities[::-1]),
+                f'{abs(wants_rate - has_rate) * 100:.0f} % ({len(activities)}/{self.people_to_wanted_events_count[key]})',
                 time,
             )
             i += 1
 
             if i % 30 == 0:
                 yield '#', '', '', '', '', '#' * 4
+
+        print(f'{error_sum=}')
 
     def run(self):
 
@@ -290,8 +333,8 @@ class Divider:
         sooner = {key: events for key, events in self.people_to_event_titles.items() if
                   self.people_to_email[key] not in MOVE_TO_LATER}
 
-        later = {key: events for key, events in self.people_to_event_titles.items() if
-                 self.people_to_email[key] in MOVE_TO_LATER}
+        # later = {key: events for key, events in self.people_to_event_titles.items() if
+        # self.people_to_email[key] in MOVE_TO_LATER}
 
         render_data = list(itertools.chain(
             self.people_to_data(sooner,
@@ -304,18 +347,13 @@ class Divider:
         csv_path = (self.base_dir / f'ALL.csv').as_posix()
         with open(csv_path, 'w') as ofile:
             writer = csv.writer(ofile, dialect='excel')
-            writer.writerow(('id', 'first_name', 'last_name', 'activities', 'count', 'time'))
+            writer.writerow(('id', 'last_name', 'first_name', 'activities', 'count', 'time'))
             writer.writerows([d for d in render_data if d[0] != '#'])
 
         with open(self.html_path, 'w') as ofile:
             ofile.write(ALL_ACTIVITIES_TMPL.render(context))
 
         pdfkit.from_file(self.html_path, self.pdf_path)
-
-        events_to_spec = dict()
-
-        for spec in self.EVENTS:
-            events_to_spec[spec.title] = spec
 
         messages = []
         for key, events in tuple(self.people_to_event_titles.items()):
@@ -324,10 +362,10 @@ class Divider:
             email = self.people_to_email[key]
             time = self.email_to_pp_time[email]
 
-            print(f'{key};{first};{last};{email}')
+            # print(f'{key};{first};{last};{email}')
 
             html_message = MAIL_TMPL.render(Context({
-                'events': ((events_to_spec[e].title, events_to_spec[e].subtitle) for e in events),
+                'events': ((self.events_to_spec[e].title, self.events_to_spec[e].subtitle) for e in events),
                 'first': first,
                 'time': time,
             }))
@@ -336,24 +374,45 @@ class Divider:
 
             mail = EmailMultiAlternatives(
                 subject='Welcome Week Events | IMPORTANT | ESN VUT Brno',
-                from_email='Events Manager ESN VUT Brno <events@esnvutbrno.cz>',
+                from_email='Welcome Week ESN VUT Brno <ww@esnvutbrno.cz>',
                 to=(
                     # 'President <prezident@esnvutbrno.cz>',
-                    # 'Joe <events@esnvutbrno.cz>',
+                    'Joe <joe.kolar@esnvutbrno.cz>',
                     # 'Viceprezident <vice@esnvutbrno.cz>',
                     # f'{email}',
                 ),  # !!!
                 body=str(plain_message),
-                bcc=['president@esnvutbrno.cz'],
+                # bcc=['president@esnvutbrno.cz'],
                 connection=mailer,
             )
+
             mail.attach_alternative(html_message, 'text/html')
+
+            mail.attach('invite.ics', self.dump_ics(email, events), 'text/calendar')
+
             # mail.attach_file('./panda-point-open-hours-welcome-week-summer-2022.png')
             messages.append(mail)
 
-            # mail.send(fail_silently=False)
+            mail.send(fail_silently=False)
+
+            break
 
             # mailer.send_messages(messages)
+
+    def dump_ics(self, email: str, events: dict[str, Event]) -> str:
+        from ics import Calendar, Event
+        cal = Calendar()
+        for event in events:
+            event_spec = self.events_to_spec[event]
+            cal_event = Event()
+            cal_event.name = event_spec.title
+            cal_event.begin = event_spec.begin
+            cal_event.duration = event_spec.duration
+            cal_event.location = event_spec.location
+            cal_event.description = f'{event_spec.title} # Meeting: {event_spec.subtitle}'
+            cal.events.add(cal_event)
+
+        return cal.serialize()
 
 
 if __name__ == '__main__':
