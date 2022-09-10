@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <style>
+        body {
+        font-family: 'Lato', sans-serif;
+    }
+        h1, h2, h3 {text-align: center; font-family: 'Kelson Sans', serif; font-weight: 600}
+
+    table {
+        width: 100%;
+    }
+    table, th, td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        line-height: 24px;
+    }
+    tr td:nth-child(5), tr th:nth-child(5) {
+        width: 35%;
+    }
+    thead { display: table-header-group; }
+    tfoot { display: table-row-group; }
+    tr { page-break-inside: avoid; }
+    h1, h3 {text-align: center}
+    td { padding: 0 4px }
+    </style>
+</head>
+<body>
+<h1>{{ spec.title }}</h1>
+<h2>{{ spec.subtitle }}</h2>
+<h3>Welcome Week Summer 2022</h3>
+<table>
+<thead>
+    <tr>
+        <th>#</th>
+        <th>First name</th>
+        <th>Last name</th>
+        <th>Phone number</th>
+        <th>Signature</th>
+    </tr>
+</thead>
+<tbody>
+    {% for row in rows %}
+        <tr>
+            <td align='center'>{{ forloop.counter }}</td>
+            <td>{{ row.1 }}</td>
+            <td>{{ row.2 }}</td>
+            <td>{{ row.3 }}</td>
+            <td>&nbsp;</td>
+        </tr>
+    {% endfor %}
+</tbody>
+</table>
+</body>
+</html>

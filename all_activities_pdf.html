@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <style>
+      body {
+          font-family: 'Lato', sans-serif;
+      }
+
+      h1, h2, h3 {
+          text-align: center;
+          font-family: 'Kelson Sans', serif;
+          font-weight: 600
+      }
+
+      table {
+          width: 100%;
+      }
+
+      table, th, td {
+          border: 1px solid black;
+          border-collapse: collapse;
+          line-height: 24px;
+      }
+
+      thead {
+          display: table-header-group;
+      }
+
+      tfoot {
+          display: table-row-group;
+      }
+
+      td {
+          padding: 0 4px
+      }
+
+      td.activites {
+          line-height: 16px;
+          font-size: .6em;
+      }
+
+      .activites {
+          width: 55%
+      }
+  </style>
+</head>
+<body>
+<h1>Panda Point Schedule: 31st Jan</h1>
+<h3>Welcome Week Summer 2022 | ESN VUT Brno</h3>
+<table>
+  <thead>
+  <tr>
+    <th>#</th>
+    <th>First name</th>
+    <th>Last name</th>
+    <th>Events</th>
+    <th>Time</th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for i, first, last, activities, time in people %}
+  <tr>
+    <td align='center'>{{ i }}</td>
+    <td>{{ first }}</td>
+    <td class='last'>{{ last }}</td>
+    <td class='activites'>{{ activities }}</td>
+    <td align='center'><strong>{{ time }}</strong></td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</body>
+</html>
