@@ -1,56 +1,97 @@
 <!doctype html>
 <html lang='en'>
 <head>
-    <meta charset='UTF-8'>
-    <style>
-        body {
-        font-family: 'Lato', sans-serif;
-    }
-        h1, h2, h3 {text-align: center; font-family: 'Kelson Sans', serif; font-weight: 600}
+  <meta charset='UTF-8'>
+  <style>
+      body {
+          font-family: 'Lato', sans-serif;
+      }
 
-    table {
-        width: 100%;
-    }
-    table, th, td {
-        border: 1px solid black;
-        border-collapse: collapse;
-        line-height: 24px;
-    }
-    tr td:nth-child(5), tr th:nth-child(5) {
-        width: 35%;
-    }
-    thead { display: table-header-group; }
-    tfoot { display: table-row-group; }
-    tr { page-break-inside: avoid; }
-    h1, h3 {text-align: center}
-    td { padding: 0 4px }
-    </style>
+      h1, h2, h3 {
+          text-align: center;
+          font-family: 'Kelson Sans', serif;
+          font-weight: 600
+      }
+
+      table {
+          width: 100%;
+      }
+
+      table, th, td {
+          border: 1px solid black;
+          border-collapse: collapse;
+          line-height: 24px;
+      }
+
+      tr td:nth-child(5), tr th:nth-child(5) {
+          width: 35%;
+      }
+
+      thead {
+          display: table-header-group;
+      }
+
+      tfoot {
+          display: table-footer-group;
+      }
+
+      tr {
+          page-break-inside: avoid;
+      }
+
+      h1, h3 {
+          text-align: center
+      }
+
+      td {
+          padding: 0 4px
+      }
+
+      .legal {
+          font-size: .8em;
+          line-height: 14px;
+          padding: 0 2mm;
+      }
+  </style>
 </head>
 <body>
 <h1>{{ spec.title }}</h1>
 <h2>{{ spec.subtitle }}</h2>
-<h3>Welcome Week Summer 2022</h3>
+<h3>Welcome Week Winter 2022</h3>
 <table>
-<thead>
-    <tr>
-        <th>#</th>
-        <th>Last name</th>
-        <th>First name</th>
-        <th>Phone number</th>
-        <th>Signature</th>
-    </tr>
-</thead>
-<tbody>
-    {% for row in rows %}
-        <tr>
-            <td align='center'>{{ forloop.counter }}</td>
-            <td>{{ row.0 }}</td>
-            <td>{{ row.1 }}</td>
-            <td>{{ row.2 }}</td>
-            <td>&nbsp;</td>
-        </tr>
-    {% endfor %}
-</tbody>
+  <thead>
+  <tr>
+    <th>#</th>
+    <th>Last name</th>
+    <th>First name</th>
+    <th>Phone number</th>
+    <th>Signature</th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for row in rows %}
+  <tr>
+    <td align='center'>{{ forloop.counter }}</td>
+    <td>{{ row.0.title }}</td>
+    <td>{{ row.1.title }}</td>
+    <td>{{ row.2 }}</td>
+    <td>&nbsp;</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+  <tfoot>
+  <tr>
+    <td colspan="5" class="legal">
+      <p>
+        By signing and by your presence at the event, you consent to be photographed and/or filmed.
+        Your signature constitutes your consent to such photography/filming and to any use of your appearance, voice, or
+        name, in any and all media by ESN VUT Brno, z.s. and Vysoké Učení Technické v Brně. You take full legal
+        responsibility for your actions, and you agree that the organizers are not legally liable
+        for any injuries or damages that could happen to you during the event.
+      </p>
+    </td>
+  </tr>
+  </tfoot>
 </table>
 </body>
 </html>

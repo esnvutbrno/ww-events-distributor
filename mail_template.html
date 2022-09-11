@@ -5,53 +5,51 @@
   <title>Welcome Week Registration | IMPORTANT | ESN VUT Brno</title>
 </head>
 <body>
-    <script type="application/ld+json">
-    {
-      "@context": "http://schema.org",
-      "@type": "EmailMessage",
-      "potentialAction": {
-        "@type": "ConfirmAction",
-        "name": "Confirm Subscription",
-        "handler": {
-          "@type": "HttpActionHandler",
-          "url": "https://esnvutbrno.cz",
-          "method": "http://schema.org/HttpRequestMethod/POST",
-        }
-      },
-      "description": "Confirm subscription to mailing list XYZ"
-    }
-    </script>
-
 Hello, {{ first }}!
 <br>
 Your registration to Welcome Week Winter 2022 has been accepted!
-<br>
-You have been confirmed for these events:
 
+<h3>Confirmed Events</h3>
+You have been confirmed for these events:
 <ul>
-  {% for event in events reversed %}
+  {% for event in events %}
   <li><strong>{{ event.0 }}:</strong> {{ event.1 }}</li>
   {% endfor %}
 </ul>
 
+<h2>Registration Process</h2>
 <span style="background-color: #EE000088; color: black; font-size: 20px">
-  It's MANDATORY to come to <a href="https://esnvutbrno.cz/where-find-us">Panda Point</a> and sign for these events.
+  It's MANDATORY to come to <a href="https://esnvutbrno.cz/where-find-us">Panda Point</a> and sign up for these events.
   <br>
-  Come on Monday 12th of September at {{ time }}, be on time!
+  To reduce waiting times, we assigned you a specific time slot to come to Panda Point:
+  <strong>Monday 12th of September at {{ time }}</strong>, be on time!
 </span>
 
 <br>
-<br>
-
 During Monday, only registration for events will be going on in Panda Point.
-To pick up your ESNcard, SIM card or to buy some basic utensils, <strong>please visit Panda Point other days than
+To pick up your ESNcard, SIM card or to buy some basic utensils, <strong>please visit Panda Point during other days than
   Monday.</strong>
-<br>
-<br>
-In case you ordered your ESN card in advance, <strong>come to pick it up from Tuesday.</strong>
 
-For those who missed deadline, you can still make a reservation by filling out this
-<a href="https://bit.ly/ESNcardApplicationESNVUTBrno">application form: https://bit.ly/ESNcardApplicationESNVUTBrno</a>.
+
+<h3>ESNcard</h3>
+In case you ordered your ESN before 9th of September incl., <strong>you can come to pick up the card.</strong>
+<br>
+For those who missed deadline, you can still order a card by filling out this application form:
+<a href="https://forms.gle/RrcByTxLGVQUEzyR9">https://forms.gle/RrcByTxLGVQUEzyR9</a>.
+
+
+<h3>Flag Parade and Erasmus Festival</h3>
+
+It's highly recommended to bring your <strong>own national flag</strong> to the Flag Parade, be creative!
+<br>
+The Erasmus Festival is the only event of Welcome Week with fee - this price is <strong>200 CZK with ESNcard and 250 CZK without ESNcard</strong>.
+<br>
+You can pay <strong>only by cash</strong> during registration in Panda Point, or at the festival entrance - the spots are
+<strong>limited!</strong>.
+<br>
+More info about the festival you can find on
+<a href="https://festival.esnbrno.cz/">festival website</a>.
+
 
 <br>
 <br>
