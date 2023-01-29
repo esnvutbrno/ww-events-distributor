@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import itertools
 import dataclasses
+import random
 import sqlite3
 import csv
 from collections import defaultdict, namedtuple
@@ -30,7 +31,7 @@ SINGLE_EVENT_QUERY = """
 WITH ordered AS (
     SELECT *,
            ROW_NUMBER() OVER (PARTITION BY email ORDER BY time DESC) = 1 as is_last
-    FROM data
+    FROM data_filtered
 )
 SELECT
        o.time,
@@ -50,7 +51,7 @@ ALL_DATA_QUERY = """
 WITH ordered AS (
     SELECT *,
            ROW_NUMBER() OVER (PARTITION BY email ORDER BY time DESC) = 1 as is_last
-    FROM data
+    FROM data_filtered
 )
 SELECT
     o.*
@@ -89,48 +90,50 @@ MAIL_TMPL = Engine().from_string(open('mail_template.html').read())
 def row_factory(cursor, row):
     d = dict(zip(map(itemgetter(0), cursor.description), row))
 
-    d['first_name'] = d['first_name'].strip().title()
-    d['last_name'] = d['last_name'].strip().title()
+    if "first_name" in d:
+        d['first_name'] = d['first_name'].strip().title()
+        d['last_name'] = d['last_name'].strip().title()
     return d
 
 
 class Divider:
     EVENTS: tuple[Event, ...] = (
-        Event('Tue 13th Sep, 15:00, in front of A03', 'Brno Observatory and Planetarium', 'observatory', 140,
-              begin='2022-09-13 13:00:00', location='Kolejní 2, Brno', duration=120),
-        Event('Tue 13th Sep, 19:40, in front of A03', 'Quiz Night #1', 'quiz1', 42, 'quiz_night', 0,
-              begin='2022-09-13 17:40:00', location='Kolejní 2, Brno', duration=120),
 
-        Event('Wed 14th Sep, 14:00, in front of A03', 'Panda Games', 'panda_games', 1000,
-              begin='2022-09-14 12:00:00', location='Kolejní 2, Brno', duration=120),
-        Event('Wed 14th Sep, 18:50, in front of A03', 'Board Games #1', 'board1', 50, 'board_games', 0,
-              begin='2022-09-14 16:50:00', location='Kolejní 2, Brno', duration=120),
-        Event('Wed 14th Sep, 19:00, Panda Point', 'Guitar Jam', 'guitar_jam', 30,
-              begin='2022-09-14 17:00:00', location='Kolejní 2, Brno', duration=120),
+        Event('Mon 30th Jan, 19:00, FBM P381', 'Discover Czech Republic', 'pofn', 1000,
+              begin='2023-01-30 19:00:00'),
 
-        Event('Thu 15th Sep, 14:00, in front of A03', 'Technical Museum', 'technical_museum', 140,
-              begin='2022-09-15 12:00:00', location='Kolejní 2, Brno', duration=120),
-        Event('Thu 15th Sep, 18:50, in front of A03', 'Board Games #2', 'board2', 50, 'board_games', 50,
-              begin='2022-09-15 16:50:00', location='Kolejní 2, Brno', duration=120),
-        Event('Thu 15th Sep, 19:00, in front of A03', 'Bowling Time', 'bowling', 36,
-              begin='2022-09-15 17:00:00', location='Kolejní 2, Brno', duration=120),
+        Event('Tue 31st Jan, 15:00, in front of A03', 'Panda Games', 'panda_games', 1000,
+              begin='2023-01-31 15:00:00'),
+        # Event('Tue 31st Jan, 22:00, in front of A03', 'Party', 'party', 1000),
 
-        Event('Fri 16th Sep, 15:00, in front of A03', 'VIDA! Science centre', 'vida', 140,
-              begin='2022-09-16 13:00:00', location='Kolejní 2, Brno', duration=120),
-        Event('Fri 16th Sep, 19:40, in front of A03', 'Quiz Night #2', 'quiz2', 42, 'quiz_night', 42,
-              begin='2022-09-16 17:40:00', location='Kolejní 2, Brno', duration=120),
+        Event('Wed 1st Feb, 14:00, in front of A03', 'Bowling Time', 'bowling', 38,
+              begin='2023-02-01 14:00:00'),
+        Event('Wed 1st Feb, 19:00, in front of A03', 'Brno Observatory and Planetarium', 'planetarium', 135,
+              begin='2023-02-01 19:00:00'),
 
-        Event('Sat 17th Sep, 14:00, in front of A03', 'Flag Parade and Erasmus Festival', 'erasmus_festival',
-              1000,
-              begin='2022-09-17 12:00:00', location='Kolejní 2, Brno', duration=8 * 60),
+        Event('Thu 2nd Feb, 14:30, in front of A03', 'Ice Skating', 'ice_skating', 40,
+              begin='2023-02-02 14:30:00'),
+        Event('Thu 2nd Feb, 18:50, in front of A03', 'Quiz Night #1', 'quiz1', 55, "quiz_night",
+              begin='2023-02-02 18:50:00'),
+        Event('Thu 2nd Feb, 18:40, in front of A03', 'Board Games at Mystica', 'board1', 70, "board_games",
+              begin='2023-02-02 18:40:00'),
 
-        Event('Sun 18th Sep, 12:00, in front of A03', 'Brno City Rally', 'city_rally', 136,
-              begin='2022-09-18 10:00:00', location='Kolejní 2, Brno', duration=180),
-        Event('Sun 18th Sep, 20:00, in front of A03', 'BBQ', 'bbq', 1000,
-              begin='2022-09-18 18:00:00', location='Kolejní 2, Brno', duration=120),
+        Event('Fri 3rd Feb, 14:30, in front of A03', 'VIDA! Science centre', 'vida', 140,
+              begin='2023-02-03 14:30:00'),
+        Event('Fri 3rd Feb, 18:25, in front of A03', 'Quiz Night #2', 'quiz2', 55, "quiz_night", 55,
+              begin='2023-02-03 18:25:00'),
+        Event('Fri 3rd Feb, 18:40, in front of A03', 'Board Games at CHILLárna', 'board2', 60, "board_games", 70,
+              begin='2023-02-03 18:40:00'),
+
+        Event('Sat 4th Feb, 7:45, in front of A03', 'Welcome Trip to Znojmo', 'welcome_trip', 82,
+              begin='2023-02-04 07:45:00'),
+
+        Event('Sun 4th Feb, 12:00, in front of A03', 'Brno City Rally', 'city_rally', 136,
+              begin='2023-02-04 12:00:00'),
+
     )
 
-    # seed(43) # 82.38
+    random.seed(43)  # 82.38
     # seed(44) # 83
     # seed(45) #
     # shuffle(EVENTS)
@@ -138,8 +141,9 @@ class Divider:
     # planetarium vida museum city_rally
 
     NO_CONFICT = (
-        {'board1', 'guitar_jam'},
-        {'board2', 'bowling'},
+        {'quiz1', 'board1'},
+        {'quiz2', 'board2'},
+        # {'ice_skating', 'bowling'},
         # ('movie1', 'board4'),
     )
 
@@ -159,7 +163,7 @@ class Divider:
         #     for e in self.EVENTS
         # }
 
-        MAX_TWO_FROM = {*'observatory vida technical_museum city_rally'.split(' ')}
+        MAX_TWO_FROM = {*''.split(' ')}
 
         people_by_events = defaultdict(list)
         event_people_count = defaultdict(int)
@@ -199,8 +203,8 @@ class Divider:
 
                 # can he make it?
                 if (when := person['arrive_when']) != 'I will arrive before Welcome Week':
-                    arrive_day = '-'.join(when.strip('.').split('.')[::-1])
-                    event_day = e.begin[5:10].removeprefix('0')
+                    arrive_day = tuple(map(int, (when.strip('.').split('.'))))[::-1]
+                    event_day = tuple(map(int, e.begin[5:10].split("-")))
 
                     if arrive_day > event_day:
                         continue
@@ -217,12 +221,12 @@ class Divider:
                 self.people_to_email[key] = person['email']
 
             if not assigned_to_events:
-                print(f'no.event', person['email'], ' '.join(f'{e.identifier}={person[e.column]}' for e in self.EVENTS))
+                print(f'no.event', person['email'], person["arrive_when"], ' '.join(f'{e.identifier}={person[e.column]}' for e in self.EVENTS))
 
         for e in self.EVENTS:
             self.write_event_detail(people_by_events[e.identifier], e)
 
-    def __init__(self, db_path: Path = './ww.sqlite'):
+    def __init__(self, db_path: Path = './summer-2023.sqlite'):
         conn = sqlite3.connect(db_path)
 
         conn.row_factory = row_factory
@@ -242,11 +246,21 @@ class Divider:
             self.events_to_spec[spec.title] = spec
 
     def write_event_detail(self, data: list[dict[str, str]], spec: Event):
-        # csv_path = (self.base_dir / f'{spec.identifier}.csv').as_posix()
-        # with open(csv_path, 'w') as ofile:
-        #     writer = csv.writer(ofile, dialect='excel')
-        #
-        #     writer.writerows(data)
+        csv_path = (self.base_dir / f'{spec.identifier}.csv').as_posix()
+        with open(csv_path, 'w') as ofile:
+            writer = csv.writer(ofile, dialect='excel')
+
+            writer.writerows([
+                (
+                    i,
+                    d['last_name'],
+                    d['first_name'],
+                    d['phone_number'],
+                ) for i, d in enumerate(
+                    sorted(data, key=itemgetter('last_name', 'first_name')),
+                    start=1
+                )
+            ])
 
         pdf_path = (self.base_dir / f'{spec.identifier}.pdf').as_posix()
         html_path = (self.base_dir / f'{spec.identifier}.html').as_posix()
@@ -269,6 +283,7 @@ class Divider:
             'footer-font-name': 'Lato',
             'footer-center': 'ESN VUT Brno',
         })
+        print("event", spec.identifier, len(data), spec.limit)
 
     def divide(self):
         for spec in self.EVENTS:
@@ -330,19 +345,19 @@ class Divider:
 
         self.print_conflict()
 
-        # cursor.execute("SELECT email FROM data WHERE czech='YES' ORDER by time LIMIT 80")
-        MOVE_TO_LATER: set[str] = set()  # set(t[0] for t in cursor.fetchall())
+        self.cursor.execute("SELECT email FROM czech_lesson")
+        MOVE_TO_LATER: set[str] = set(t["email"] for t in self.cursor.fetchall())
+        # MOVE_TO_LATER: set[str] = set()
         sooner = {key: events for key, events in self.people_to_event_titles.items() if
                   self.people_to_email[key] not in MOVE_TO_LATER}
 
-        # later = {key: events for key, events in self.people_to_event_titles.items() if
-        # self.people_to_email[key] in MOVE_TO_LATER}
+        later = {key: events for key, events in self.people_to_event_titles.items() if
+        self.people_to_email[key] in MOVE_TO_LATER}
 
         render_data = list(itertools.chain(
-            self.people_to_data(sooner,
-                                "11:30 12:00 12:30 13:00 13:30 14:00 14:30 15:00 15:30 16:00 16:30".split(' ')),
-            # (('#', '', '', '', '#' * 4),),
-            # people_to_data(later, "16:00 16:30 17:00".split(' '), len(sooner)),
+            self.people_to_data(sooner, "11:30 12:00 12:30 13:00 13:30 14:00 14:30".split(' ')),
+            (('#', '', '', '', '', '#' * 4),),
+            self.people_to_data(later, "15:00 15:30 16:00 16:30".split(' '), len(sooner)),
         ))
         context = Context({'people': render_data})
 
@@ -359,17 +374,15 @@ class Divider:
 
         # return
         messages = []
-        # to_send = sample(tuple(self.people_to_event_titles.items()), 10)
+        # to_send = sample(tuple(self.people_to_event_titles.items()), 1)
         to_send = tuple(self.people_to_event_titles.items())
-        # return
 
         for i, (key, events) in enumerate(to_send):
-            if i <= 270:
-                continue
-
             first, last = key
 
             email = self.people_to_email[key]
+            if email == "linas.micius@stud.vilniustech.lt":
+                continue
             time = self.email_to_pp_time[email]
 
             html_message = MAIL_TMPL.render(Context({
@@ -392,13 +405,13 @@ class Divider:
                     f'{email}',
                 ),  # !!!
                 body=str(plain_message),
-                # bcc=['president@esnvutbrno.cz'],
+                bcc=['president@esnvutbrno.cz'],
                 connection=mailer,
             )
 
             mail.attach_alternative(html_message, 'text/html')
 
-            mail.attach('invite.ics', self.dump_ics(email, events), 'text/calendar')
+            # mail.attach('invite.ics', self.dump_ics(email, events), 'text/calendar')
 
             # mail.attach_file('./panda-point-open-hours-welcome-week-summer-2022.png')
             messages.append(mail)
@@ -414,6 +427,7 @@ class Divider:
 
         mailer.send_messages(messages)
         print('flushed', f'{len(messages)}')
+
 
     def dump_ics(self, email: str, events: dict[str, Event]) -> str:
         from ics import Calendar, Event
